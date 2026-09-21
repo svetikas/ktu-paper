@@ -502,6 +502,11 @@
 
     // Bibliography citing style
     set bibliography(style: "assets/iso690-numeric-lt.csl")
+    
+    // Block equations are left-aligned
+    show math.equation.where(block: true): it => {
+        align(left, it)
+    }
 
     body
 }
