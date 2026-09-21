@@ -128,8 +128,43 @@
     ]
 }
 
+#let ktu-heading-page(
+    faculty: highlight[Fakulteto pavadinimas],
+    department: none, // optional
+    title: highlight[Rašto darbo pavadinimas],
+    subtitles: highlight[Praktikos ataskaita / referatas ir pan. (įrašyti rašto darbo tipą)],
+    authors: (
+        (highlight[Vardenis Pavardenis], highlight[Projekto autorius]),
+        (highlight[Vardenis Pavardenis], highlight[Vadovas]),
+    ),
+    place: highlight[Kaunas],
+    year: highlight[#datetime.today().year()],
+    centerAuthors: false,
+) = {
+    let subHeaders = (faculty,)
+    if department != none {
+        subHeaders = (faculty, department)
+    }
+    if type(subtitles) != array {
+        subtitles = (subtitles,)
+    }
+    ktu-title-header-block(
+        subHeaders: subHeaders,
+        bigTitle: title,
+        subTitles: subtitles,
+    )
+    v(94pt)
+    if centerAuthors {
+        ktu-author-table(authors: authors, alignment: center)
+    } else {
+        ktu-author-table(authors: authors)
+    }
+    align(center+bottom, block([*#place, #year*]))
+}
+
 #let ktu-heading-page-centered(
     faculty: highlight[Fakulteto pavadinimas],
+    department: none, // optional
     title: highlight[Rašto darbo pavadinimas],
     subtitles: highlight[Praktikos ataskaita / referatas ir pan. (įrašyti rašto darbo tipą)],
     authors: (
@@ -139,22 +174,21 @@
     place: highlight[Kaunas],
     year: highlight[#datetime.today().year()],
 ) = {
-    let isArr = type(subtitles) == array
-    if not isArr {
-        subtitles = (subtitles,)
-    }
-    ktu-title-header-block(
-        subHeaders: (faculty,),
-        bigTitle: title,
-        subTitles: subtitles,
+    ktu-heading-page(
+        faculty: faculty,
+        department: department,
+        title: title,
+        subtitles: subtitles,
+        authors: authors,
+        place: place,
+        year: year,
+        centerAuthors: true,
     )
-    v(94pt)
-    ktu-author-table(authors: authors, alignment: center)
-    align(center+bottom, block([*#place, #year*]))
 }
 
 #let ktu-heading-page-normal(
     faculty: highlight[Fakulteto pavadinimas],
+    department: none, // optional
     title: highlight[Rašto darbo pavadinimas],
     subtitles: highlight[Praktikos ataskaita / referatas ir pan. (įrašyti rašto darbo tipą)],
     authors: (
@@ -164,18 +198,16 @@
     place: highlight[Kaunas],
     year: highlight[#datetime.today().year()],
 ) = {
-    let isArr = type(subtitles) == array
-    if not isArr {
-        subtitles = (subtitles,)
-    }
-    ktu-title-header-block(
-        subHeaders: (faculty,),
-        bigTitle: title,
-        subTitles: subtitles,
+    ktu-heading-page(
+        faculty: faculty,
+        department: department,
+        title: title,
+        subtitles: subtitles,
+        authors: authors,
+        place: place,
+        year: year,
+        centerAuthors: false,
     )
-    v(94pt)
-    ktu-author-table(authors: authors)
-    align(center+bottom, block([*#place, #year*]))
 }
 
 #let ktu-academic-honestly-declaration-page(

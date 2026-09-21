@@ -2,7 +2,8 @@
 #import "config.typ": debug-author-table, enable-heading-experiment, __HEADING_EXPERIMENT, __FIG_PER_SECTION, __UPPERCASE_SECTION_TITLES
 #import "fragments.typ": (
     ktu-table,
-    ktu-heading-page-centered, ktu-heading-page-normal, ktu-academic-honestly-declaration-page
+    ktu-heading-page, ktu-heading-page-centered, ktu-heading-page-normal,
+    ktu-academic-honestly-declaration-page
 )
 #import "figures.typ": (
     __fig-supplement,
