@@ -191,7 +191,7 @@ Eu eum decore inimicus consetetur, cu usu habeo corpora intellegam. Ut antiopam 
 Lorem ipsum dolor sit amet, eam ex decore persequeris, sit at illud lobortis atomorum. Sed dolorem quaerendum ne, prompta instructior ne pri. Et mel partiendo suscipiantur, docendi abhorreant ea sit. Recteque imperdiet eum te.
 
 #figure(
-  image("Picture.png", width: 11.2cm, height: 8cm),
+  image("images/santaka.png", width: 11.2cm, height: 8cm),
   caption: [
     Kauno technologijos universiteto „Santakos“ slėnio fasadas
   ],

@@ -94,7 +94,7 @@ show table.cell: set text(size: 8pt)
 Duomenų sklaidą yra patogu pavaizduoti ir stačiakampe diagrama:
 
 #figure(
-  image("image.jpeg", width: 70%),
+  image("images/santaka.png", width: 70%),
   caption: [
     Skaitinių atributų stačiakampė diagrama
   ],
@@ -136,8 +136,8 @@ Paveikslėlius galima grupuoti į "grid" #custom-ref(<image-grid-2>, <image-grid
 #figure(grid(
   columns: 2,
   gutter: 2mm,
-  image("image.jpeg", width: 100%),
-  image("image.jpeg", width: 100%),
+  image("images/santaka.png", width: 100%),
+  image("images/santaka.png", width: 100%),
 ), caption: [
   Paveikslėliai "grid'e" 1
 ]) <image-grid-2>
@@ -145,11 +145,11 @@ Paveikslėlius galima grupuoti į "grid" #custom-ref(<image-grid-2>, <image-grid
 #figure(grid(
   columns: 3,
   gutter: 2mm,
-  image("image.jpeg", width: 100%),
-  image("image.jpeg", width: 100%),
-  image("image.jpeg", width: 100%),
-  image("image.jpeg", width: 100%),
-  image("image.jpeg", width: 100%),
+  image("images/santaka.png", width: 100%),
+  image("images/santaka.png", width: 100%),
+  image("images/santaka.png", width: 100%),
+  image("images/santaka.png", width: 100%),
+  image("images/santaka.png", width: 100%),
 ), caption: [
   Paveikslėliai "grid'e" 2
 ]) <image-grid-3>
@@ -190,7 +190,7 @@ $
 čia $X$ -- imtis, $mu$ -- imties vidurkis, $sigma$ -- imties standartinis nuokrypis. Fragmentas pateikiamas #ref-no(<image-1>) paveikslėlyje.
 
 #figure(
-  image("image.jpeg", width: 90%),
+  image("images/santaka.png", width: 90%),
   caption: [
     Paveikslėlio pavadinimas
   ],
