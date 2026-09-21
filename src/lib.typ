@@ -25,15 +25,25 @@
  * - Proposal: change `leading` option to `line-height` | https://github.com/typst/typst/issues/4224
 */
 
+#let __METADATA_HEADING_ALIGN_LEFT = metadata("heading-align-left");
+
 /// 
 /// Insert a heading without a number.
 /// 
 /// Usually used for introductory or summary sections at the start and end.
-/// - text (str): The heading's title.
+/// - headingElement (heading): The heading's title.
+/// - alignLeft (bool): Whether the heading should be left-aligned or centered.
 /// -> 
-#let unnumbered-heading(text) = {
-    set heading(numbering: none)
-    [#text]
+#let unnumbered-heading(headingElement, alignLeft: false) = {
+    let fields = headingElement.fields()
+    let body = fields.body
+    let level = fields.at("level", default: 1)
+    
+    if alignLeft {
+        body = body + __METADATA_HEADING_ALIGN_LEFT
+    }
+    
+    heading(level: level, numbering: none, body)
 }
 
 #let appendix-item(body) = {
@@ -444,7 +454,12 @@
         // Antraštė be nr.
         if it.numbering == none {
             // Centruota lygiuotė by default, but can be overridden by the user
-            set align(unnumberedHeadingAlignment)
+            let explicitlyAlignLeft = it.body.has("children") and it.body.children.len() > 1 and it.body.children.at(1) == __METADATA_HEADING_ALIGN_LEFT
+
+            // If the user explicitly set alignLeft to true, we should align left regardless of the global setting
+            let targetAlign = if explicitlyAlignLeft { left } else { unnumberedHeadingAlignment }
+     
+            set align(targetAlign)
 
             // atstumas prieš ir po antraštės - 10 pt
             block[#maybe-uppercase(it.body)]
