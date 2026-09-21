@@ -1,7 +1,7 @@
 // This file includes logic for displaying figures in the document, including numbering, captions, and references. It also includes logic for handling figure numbering per section or globally, based on the configuration set in `config.typ`.
 #import "config.typ": __FIG_PER_SECTION
 
-/// Localizations for various recognized referencable figure types.
+/// Localizations for various recognized referenceable figure types.
 /// This is used to provide the correct supplement text for each type of figure
 /// when generating references, captions and outlines.
 #let __figureNames = (
