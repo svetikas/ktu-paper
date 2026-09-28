@@ -17,6 +17,7 @@
 #let ktu-author-table(
     authors: (),
     alignment: right,
+    namesFirst: true, // if false, roles will be displayed first
 ) = context {
     // The layout should be a list of lists whose elements are (name, role) pairs.
     assert(authors.len() > 0, message: "author table must have at least one author")
@@ -51,9 +52,13 @@
             table.header([]),
             ..for author in authors {
                 let (name, role) = author
+                name = [*#name*]
+                if not namesFirst {
+                    (role, name) = (name, role)
+                }
                 (align(center)[
                     #set block(below: 8pt)
-                    #block[*#name*]
+                    #block[#name]
                     #block[#role]
                     
                 ], [])
@@ -67,9 +72,13 @@
             ),
             ..for author in authors {
                 let (name, role) = author
+                name = [*#name*]
+                if not namesFirst {
+                    (role, name) = (name, role)
+                }
                 (align(left)[
                     #set block(below: 8pt)
-                    #block[*#name*]
+                    #block[#name]
                     #block[#role]
                     
                 ], [], [], [])
@@ -140,6 +149,7 @@
     place: highlight[Kaunas],
     year: highlight[#datetime.today().year()],
     centerAuthors: false,
+    authorNamesFirst: true, // if false, roles will be displayed first
 ) = {
     let subHeaders = (faculty,)
     if department != none {
@@ -155,9 +165,9 @@
     )
     v(94pt)
     if centerAuthors {
-        ktu-author-table(authors: authors, alignment: center)
+        ktu-author-table(authors: authors, namesFirst: authorNamesFirst, alignment: center)
     } else {
-        ktu-author-table(authors: authors)
+        ktu-author-table(authors: authors, namesFirst: authorNamesFirst)
     }
     align(center+bottom, block([*#place, #year*]))
 }
@@ -171,6 +181,7 @@
         (highlight[Vardenis Pavardenis], highlight[Projekto autorius]),
         (highlight[Vardenis Pavardenis], highlight[Vadovas]),
     ),
+    authorNamesFirst: true, // if false, roles will be displayed first
     place: highlight[Kaunas],
     year: highlight[#datetime.today().year()],
 ) = {
@@ -183,6 +194,7 @@
         place: place,
         year: year,
         centerAuthors: true,
+        authorNamesFirst: authorNamesFirst,
     )
 }
 
@@ -195,6 +207,7 @@
         (highlight[Vardenis Pavardenis], highlight[Projekto autorius]),
         (highlight[Vardenis Pavardenis], highlight[Vadovas]),
     ),
+    authorNamesFirst: true, // if false, roles will be displayed first
     place: highlight[Kaunas],
     year: highlight[#datetime.today().year()],
 ) = {
@@ -207,6 +220,7 @@
         place: place,
         year: year,
         centerAuthors: false,
+        authorNamesFirst: authorNamesFirst,
     )
 }
 
