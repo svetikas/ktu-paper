@@ -2,6 +2,10 @@
 #import "config.typ": debug-author-table, enable-heading-experiment, __HEADING_EXPERIMENT, __FIG_PER_SECTION, __UPPERCASE_SECTION_TITLES
 #import "fragments.typ": (
     ktu-table,
+
+    // building blocks
+    ktu-author-table, ktu-title-header-block,
+    
     ktu-heading-page, ktu-heading-page-centered, ktu-heading-page-normal,
     ktu-academic-honestly-declaration-page
 )
