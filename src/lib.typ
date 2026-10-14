@@ -10,10 +10,15 @@
     ktu-academic-honestly-declaration-page
 )
 #import "figures.typ": (
-    __fig-supplement,
+    ref-no, custom-ref,
 
-    __get-figure-number,
+    __fig-supplement,
+    __figure-supplement-of,
     __get-locatable-element-number,
+    __reset-figure-counters,
+    __equation-numbering,
+    __normalize-figure-kinds,
+    __USER_FIGURE_KINDS,
 
     __format-ref,
     __format-figure,
@@ -83,109 +88,6 @@
     ""
   }
   integer-part + padded-decimal
-}
-
-/// Returns a number for the given reference target.
-/// - target (label): Label to get the reference number for.
-#let ref-no(target) = context {
-    if type(target) != label {
-        panic("ref-no expects a label as input")
-    }
-
-    let loc = locate(target)
-    let elem = query(target)
-    let item = elem.at(0)
-    
-    // If it's a figure, return the figure number
-    if item.func() == figure {
-        link(loc, [#__get-figure-number(item, loc)])
-    } else if item.func() == heading {
-        let fullValue = counter(heading).at(loc)
-
-        // If the heading has the "appendix-heading" metadata attached,
-        // it means that it's an appendix heading and should be numbered differently
-        if item.body.has("children") and item.body.children.at(0) == metadata("appendix-heading") {
-            link(loc, [#fullValue.at(1)])
-        // Otherwise, show the fully qualified heading numbering
-        } else {
-            link(loc, [#fullValue.map((x) => str(x)).join(".")])
-        }
-    } else {
-        panic("referencing unknown type: ", item.func())
-    }
-}
-
-// Constructs a reference from multiple targets
-#let custom-ref(..targets) = context {
-  let collected = (:)
-
-  for target in targets.pos() {
-    let loc = locate(target)
-    let elem = query(target)
-
-    let fig = elem.at(0)
-    if fig.func() != figure {
-      panic("referencing unknown type")
-    }
-
-    // determine what we...
-    let element = fig.body;
-    let elementName = "unknown";
-    let found = false;
-    while not found {
-
-      // If it's a grid
-      if (element.func() == grid) {
-        for cell in element.children {
-          if cell.body.func() == image {
-            elementName = "pav."
-            found = true
-            break
-          }
-        }
-        break
-      }
-
-      if (element.func() == table) {
-        elementName = "lentelė"
-        found = true
-        break
-      }
-
-    if (element.func() == raw) {
-        elementName = "kodo frag."
-        found = true
-        break
-      }
-
-      if (element.func() == image) {
-        elementName = "pav."
-        found = true
-        break
-      }
-
-      panic("unknown element", element.func())
-    }
-
-    if elementName not in collected {
-      collected.insert(elementName, ())
-    }
-
-    collected.at(elementName).push(
-      (loc, __get-figure-number(fig, loc))
-    )
-  }
-
-  if collected.len() > 1 {
-    panic("multiple types detected")
-  }
-
-  for type in collected {
-    let name = type.at(0)
-    let arr = type.at(1).sorted(key: k => k.at(1))
-
-    [(žr. #arr.map(x =>link(x.at(0), [#x.at(1)])).join(", ") #name)]
-  }
 }
 
 
@@ -297,11 +199,12 @@
                 #(o.target == selector(heading))
             ]*/
 
+            // Any other figure kind (generally, user defined kinds)
             show outline.entry: it => link(
                 it.element.location(),
                 it.indented(
-                    [*#__get-locatable-element-number(it.element) unknown.*],
-                    it.inner(), gap: 0pt
+                    [*#__get-locatable-element-number(it.element) #__figure-supplement-of(it.element).*],
+                    [ #it.inner()], gap: 0pt
                 ),
             )
             o
@@ -340,6 +243,10 @@
 
 #let ktu-picture-list() = {
     ktu-outline(title: heading("Paveikslų sąrašas", outlined: true), target: figure.where(kind: image))
+}
+
+#let ktu-code-list() = {
+  ktu-outline(title: heading("Kodo fragmentų sąrašas", outlined: true), target: figure.where(kind: raw))
 }
 
 /// Define a custom outline for a specific figure type.
@@ -389,7 +296,7 @@
     set heading(numbering: "1.")
 
     // Number equations
-    set math.equation(numbering: "(1)")
+    set math.equation(numbering: __equation-numbering)
 
     // Set text font
     set text(
@@ -480,9 +387,7 @@
 
             // Reset figure counters if numbering per section is enabled
             if __FIG_PER_SECTION.get() {
-                counter(figure.where(kind: image)).update(0)
-                counter(figure.where(kind: table)).update(0)
-                counter(figure.where(kind: raw)).update(0)
+                __reset-figure-counters()
             }
 
             // po antraštės - 10 pt
@@ -536,9 +441,13 @@
 /// - figureNumberingPerSection (bool): Whether to number figures per section rather than globally.
 /// - uppercaseSectionTitles (bool): Whether to uppercase section titles.
 /// - unnumberedHeadingAlignment (alignment): Alignment for unnumbered headings.
+/// - figureKinds (dictionary): Extra figure kinds, e.g.
+///   `(command: (supplement: "komanda", ref-name: "komanda"))`. `ref-name`
+///   defaults to `supplement`. Use them with `figure(kind: "command", ...)`.
 #let ktu-paper(
     font: "Times New Roman",
     figureNumberingPerSection: false,
+    figureKinds: (:),
     // Not sure about formal conformity of deviating
     // from the defaults of the next options,
     // but some modules may require them
@@ -552,6 +461,7 @@
         unnumberedHeadingAlignment: unnumberedHeadingAlignment,
     )
     __FIG_PER_SECTION.update(figureNumberingPerSection)
+    __USER_FIGURE_KINDS.update(__normalize-figure-kinds(figureKinds))
     __UPPERCASE_SECTION_TITLES.update(uppercaseSectionTitles)
     body
 }
