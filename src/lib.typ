@@ -12,9 +12,7 @@
 #import "figures.typ": (
   ref-no, custom-ref,
 
-  __fig-supplement,
-  __figure-supplement-of,
-  __get-locatable-element-number,
+  __caption-label,
   __reset-figure-counters,
   __equation-numbering,
   __normalize-figure-kinds,
@@ -158,7 +156,7 @@
       show outline.entry: it => link(
         it.element.location(),
         it.indented(
-          [*#__get-locatable-element-number(it.element) #__fig-supplement(image).*],
+          [*#__caption-label(it.element)*],
           [ #it.inner()], gap: 0pt
         ),
       )
@@ -169,7 +167,7 @@
       show outline.entry: it => link(
         it.element.location(),
         it.indented(
-          [*#__get-locatable-element-number(it.element) #__fig-supplement(table).*],
+          [*#__caption-label(it.element)*],
           [ #it.inner()], gap: 0pt
         ),
       )
@@ -180,7 +178,7 @@
       show outline.entry: it => link(
         it.element.location(),
         it.indented(
-          [*#__get-locatable-element-number(it.element) #__fig-supplement(raw).*],
+          [*#__caption-label(it.element)*],
           [ #it.inner()], gap: 0pt
         ),
       )
@@ -202,7 +200,7 @@
       show outline.entry: it => link(
         it.element.location(),
         it.indented(
-          [*#__get-locatable-element-number(it.element) #__figure-supplement-of(it.element).*],
+          [*#__caption-label(it.element)*],
           [ #it.inner()], gap: 0pt
         ),
       )
@@ -444,8 +442,13 @@
 /// - uppercaseSectionTitles (bool): Whether to uppercase section titles.
 /// - unnumberedHeadingAlignment (alignment): Alignment for unnumbered headings.
 /// - figureKinds (dictionary): Extra figure kinds, e.g.
-///   `(command: (supplement: "komanda", ref-name: "komanda"))`. `ref-name`
-///   defaults to `supplement`. Use them with `figure(kind: "command", ...)`.
+///   `(command: (supplement: "komanda", ref-name: "komanda", single-name: "komanda"))`.
+///   Use them with `figure(kind: "command", ...)`. Keys:
+///   - `supplement` (required): text after the number in captions, e.g. "1 komanda.".
+///   - `ref-name`: text used in references, e.g. "(žr. 1 komanda)". Defaults to `supplement`.
+///   - `single-name`: full word used when the figure is the only one of its kind
+///     and is left unnumbered, e.g. "Komanda." and "(žr. komanda)". Defaults to `supplement`.
+///     Currently only tables and images are left unnumbered when single, so this only matters for kinds added there.
 #let ktu-paper(
   font: "Times New Roman",
   figureNumberingPerSection: false,

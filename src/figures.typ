@@ -8,11 +8,13 @@
 /// Localizations for the recognized referenceable figure kinds, keyed by `repr(func)`.
 /// - supplement: used in captions (the caption adds the separator, e.g. "1 pav.").
 /// - ref-name: used in references, e.g. "(žr. 1 pav.)".
+/// - single-name: full word used when the figure is the only one of its kind and
+///   therefore unnumbered, e.g. "Paveikslas. ..." and "(žr. paveikslas)".
 #let __figure-kinds = (
-  table: (supplement: "lentelė", ref-name: "lentelė"),
-  image: (supplement: "pav", ref-name: "pav."),
-  raw: (supplement: "kodo frag", ref-name: "kodo frag."),
-  equation: (supplement: "lygtis", ref-name: "formulė"),
+  table: (supplement: "lentelė", ref-name: "lentelė", single-name: "lentelė"),
+  image: (supplement: "pav", ref-name: "pav.", single-name: "paveikslas"),
+  raw: (supplement: "kodo frag", ref-name: "kodo frag.", single-name: "kodo fragmentas"),
+  equation: (supplement: "lygtis", ref-name: "formulė", single-name: "lygtis"),
 )
 
 /// Figure kinds registered by the document author via `ktu-paper(figureKinds: ...)`.
@@ -30,6 +32,7 @@
     normalized.insert(key, (
       supplement: spec.supplement,
       ref-name: spec.at("ref-name", default: spec.supplement),
+      single-name: spec.at("single-name", default: spec.supplement),
     ))
   }
   normalized
@@ -187,10 +190,48 @@
 }
 
 // ---------------------------------------------------------------------------
+// Single-figure handling
+// ---------------------------------------------------------------------------
+
+/// Figure kinds that are left unnumbered when the document contains only one
+/// captioned figure of that kind: "Lentelė. Aprašas" and "(žr. lentelė)"
+/// instead of "1 lentelė. Aprašas" and "(žr. 1 lentelė)". The word used comes
+/// from the kind's `single-name`.
+/// Keys are `__figure-key` values.
+#let __UNNUMBERED_WHEN_SINGLE = ("table", "image")
+
+/// Whether `fig` is the only captioned figure of its kind in the document and
+/// its kind is listed in `__UNNUMBERED_WHEN_SINGLE`. Must be called in a context.
+#let __is-single-unnumbered(fig) = {
+  if __figure-key(fig) not in __UNNUMBERED_WHEN_SINGLE { return false }
+  query(figure.where(kind: fig.kind)).filter(f => f.caption != none).len() == 1
+}
+
+/// Capitalizes the first letter of `value` ("lentelė" -> "Lentelė").
+#let __capitalize(value) = {
+  let first = value.first()
+  upper(first) + value.slice(first.len())
+}
+
+/// Caption label of a figure element: "1 lentelė." normally, or
+/// "Lentelė." for a single unnumbered figure.
+#let __caption-label(fig) = context {
+  let supplement = __figure-supplement-of(fig)
+  if __is-single-unnumbered(fig) {
+    let name = __all-figure-kinds().at(__figure-key(fig)).single-name
+    [#__capitalize(name).]
+  } else {
+    [#__get-figure-number(fig, fig.location()) #supplement.]
+  }
+}
+
+// ---------------------------------------------------------------------------
 // References
 // ---------------------------------------------------------------------------
 
 /// Returns a number for the given reference target.
+/// Panics for a figure that is the only one of its kind,
+/// since such figures have no number.
 /// - target (label): Label to get the reference number for.
 #let ref-no(target) = context {
   if type(target) != label {
@@ -202,6 +243,13 @@
   let kind = item.func()
 
   let number = if kind == figure {
+    if __is-single-unnumbered(item) {
+      panic(
+        "ref-no: " + str(target) + " is the only " + __figure-key(item)
+          + " in the document and is therefore unnumbered; "
+          + "refer to it with @" + str(target) + " (or custom-ref) instead",
+      )
+    }
     __get-figure-number(item, loc)
   } else if kind == math.equation {
     "(" + __get-equation-number(loc) + ")"
@@ -223,6 +271,7 @@
 /// - targets (label...): Labels to create a custom reference for.
 #let custom-ref(..targets) = context {
   let group-name = none
+  let single-name = none // set when the target is a lone, unnumbered figure
   let entries = () // (location, number) pairs
 
   for target in targets.pos() {
@@ -237,6 +286,7 @@
       if kind not in kinds {
         panic("unregistered figure kind `" + kind + "`: register it with ktu-paper(figureKinds: ...)")
       }
+      if __is-single-unnumbered(item) { single-name = kinds.at(kind).single-name }
       (kinds.at(kind).ref-name, __get-figure-number(item, loc))
     } else {
       panic("referencing unknown type: " + repr(item.func()))
@@ -250,8 +300,13 @@
   }
 
   if entries.len() > 0 {
-    let links = __sort-entries(entries).map(e => link(e.at(0), e.at(1)))
-    [(žr. #links.join(", ") #group-name)]
+    if single-name != none {
+      // The only figure of its kind: no number, e.g. "(žr. lentelė)"
+      [(žr. #link(entries.first().at(0), single-name))]
+    } else {
+      let links = __sort-entries(entries).map(e => link(e.at(0), e.at(1)))
+      [(žr. #links.join(", ") #group-name)]
+    }
   }
 }
 
@@ -286,10 +341,7 @@
 
   set text(size: 11pt)
 
-  let supplement = __figure-supplement-of(it)
-  let separator = [.]
-  let fig-num = context __get-figure-number(it, here())
-  let caption-line = [*#fig-num #supplement#separator* #caption.body]
+  let caption-line = [*#__caption-label(it)* #caption.body]
 
   // Tables have captions at the top
   if it.kind == table {
