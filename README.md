@@ -4,9 +4,9 @@ This repository contains a Typst template for academic papers at the Kaunas Univ
 
 ## Initiating the template
 Install the downloaded template under the following directory:
-- Linux: `~/.local/share/typst/packages/local/ktu-paper/0.4.0/`
+- Linux: `~/.local/share/typst/packages/local/ktu-paper/0.4.1/`
 
 And then initiate a new project:
 ```sh
-typst init @local/ktu-paper:0.4.0
+typst init @local/ktu-paper:0.4.1
 ```
