@@ -1,4 +1,4 @@
-#import "../src/lib.typ": (
+#import "@local/ktu-paper:0.5.0": (
   ktu-paper,
   ktu-table-of-contents, ktu-picture-list, ktu-table-list, ktu-code-list,
   ktu-heading-page-normal,
