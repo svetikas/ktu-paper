@@ -7,7 +7,9 @@
 
 /// Localizations for the recognized referenceable figure kinds, keyed by `repr(func)`.
 /// - supplement: used in captions (the caption adds the separator, e.g. "1 pav.").
-/// - ref-name: used in references, e.g. "(žr. 1 pav.)".
+/// - ref-name: used in references, e.g. "(žr. 1 pav.)". Either a string or a
+///   function `count => string`, called with the number of elements mentioned
+///   together, e.g. "(žr. 1 priedą)" vs "(žr. 1, 2 priedus)".
 /// - single-name: full word used when the figure is the only one of its kind and
 ///   therefore unnumbered, e.g. "Paveikslas. ..." and "(žr. paveikslas)".
 #let __figure-kinds = (
@@ -15,6 +17,12 @@
   image: (supplement: "pav", ref-name: "pav.", single-name: "paveikslas"),
   raw: (supplement: "kodo frag", ref-name: "kodo frag.", single-name: "kodo fragmentas"),
   equation: (supplement: "lygtis", ref-name: "formulė", single-name: "lygtis"),
+  // Appendices are headings, not figures, but they use the same referencing
+  appendix: (
+    supplement: "priedas",
+    ref-name: count => if count == 1 { "priedą" } else { "priedus" },
+    single-name: "priedas",
+  ),
 )
 
 /// Figure kinds registered by the document author via `ktu-paper(figureKinds: ...)`.
@@ -160,10 +168,32 @@
 }
 
 /// Appendix headings carry an "appendix-heading" metadata marker as their
-/// first child and are numbered differently from normal headings.
+/// first child (or as their whole body, when the appendix has no title) and
+/// are numbered separately from normal headings.
 #let __is-appendix-heading(item) = {
   let body = item.body
-  body.has("children") and body.children.at(0, default: none) == metadata("appendix-heading")
+  if body.has("children") {
+    body.children.at(0, default: none) == metadata("appendix-heading")
+  } else {
+    body == metadata("appendix-heading")
+  }
+}
+
+/// Returns the title of an appendix heading element (everything after the
+/// marker), or `none` if the appendix has no title.
+#let __appendix-title(item) = {
+  let body = item.body
+  if not body.has("children") { return none }
+  let rest = body.children.slice(1)
+  if rest.len() == 0 { none } else { rest.join() }
+}
+
+/// Returns the number (int) of an appendix heading element: its position among
+/// all appendices, in document order. Must be called in a context.
+#let __appendix-number(item) = {
+  query(selector(heading).before(item.location(), inclusive: true))
+    .filter(h => __is-appendix-heading(h))
+    .len()
 }
 
 /// Parses a dotted number such as "12" or "1.12.5" into an array of ints.
@@ -245,20 +275,24 @@
   let number = if kind == figure {
     if __is-single-unnumbered(item) {
       panic(
-        "ref-no: " + str(target) + " is the only " + __figure-key(item)
+        "ref-no: "
+          + str(target)
+          + " is the only "
+          + __figure-key(item)
           + " in the document and is therefore unnumbered; "
-          + "refer to it with @" + str(target) + " (or custom-ref) instead",
+          + "refer to it with @"
+          + str(target)
+          + " (or custom-ref) instead",
       )
     }
     __get-figure-number(item, loc)
   } else if kind == math.equation {
     "(" + __get-equation-number(loc) + ")"
   } else if kind == heading {
-    let numbers = counter(heading).at(loc)
     if __is-appendix-heading(item) {
-      str(numbers.at(1))
+      str(__appendix-number(item))
     } else {
-      numbers.map(str).join(".")
+      counter(heading).at(loc).map(str).join(".")
     }
   } else {
     panic("referencing unknown type: " + repr(kind))
@@ -270,7 +304,8 @@
 /// Create a custom reference for multiple targets of the same type.
 /// - targets (label...): Labels to create a custom reference for.
 #let custom-ref(..targets) = context {
-  let group-name = none
+  let group-key = none
+  let group-name = none // a string, or a function of the number of mentions
   let single-name = none // set when the target is a lone, unnumbered figure
   let entries = () // (location, number) pairs
 
@@ -278,8 +313,9 @@
     let item = query(target).first()
     let loc = item.location()
 
-    let (name, number) = if item.func() == math.equation {
-      (__figure-kinds.equation.ref-name, __get-equation-number(loc))
+    // (kind key used for grouping, ref-name spec, number)
+    let (key, name, number) = if item.func() == math.equation {
+      ("equation", __figure-kinds.equation.ref-name, __get-equation-number(loc))
     } else if item.func() == figure {
       let kind = __figure-key(item)
       let kinds = __all-figure-kinds()
@@ -287,14 +323,17 @@
         panic("unregistered figure kind `" + kind + "`: register it with ktu-paper(figureKinds: ...)")
       }
       if __is-single-unnumbered(item) { single-name = kinds.at(kind).single-name }
-      (kinds.at(kind).ref-name, __get-figure-number(item, loc))
+      (kind, kinds.at(kind).ref-name, __get-figure-number(item, loc))
+    } else if item.func() == heading and __is-appendix-heading(item) {
+      ("appendix", __figure-kinds.appendix.ref-name, str(__appendix-number(item)))
     } else {
       panic("referencing unknown type: " + repr(item.func()))
     }
 
-    if group-name != none and group-name != name {
+    if group-key != none and group-key != key {
       panic("custom-ref does not support grouping different elements together")
     }
+    group-key = key
     group-name = name
     entries.push((loc, number))
   }
@@ -305,7 +344,8 @@
       [(žr. #link(entries.first().at(0), single-name))]
     } else {
       let links = __sort-entries(entries).map(e => link(e.at(0), e.at(1)))
-      [(žr. #links.join(", ") #group-name)]
+      let name = if type(group-name) == function { group-name(entries.len()) } else { group-name }
+      [(žr. #links.join(", ") #name)]
     }
   }
 }
@@ -322,6 +362,8 @@
     let loc = el.location()
     link(loc, "(" + __get-equation-number(loc) + ")")
   } else if el.func() == figure and __figure-key(el) in __all-figure-kinds() {
+    custom-ref(it.target)
+  } else if el.func() == heading and __is-appendix-heading(el) {
     custom-ref(it.target)
   } else {
     it

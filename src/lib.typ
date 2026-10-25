@@ -20,6 +20,11 @@
 
   __format-ref,
   __format-figure,
+  __figure-kinds,
+
+  __is-appendix-heading,
+  __appendix-title,
+  __appendix-number,
 )
 
 /**
@@ -53,11 +58,30 @@
   heading(level: level, numbering: none, body)
 }
 
-#let appendix-item(body) = {
+/// Insert an appendix (priedas).
+///
+/// Appendices are numbered 1, 2, 3, ... in the order they appear in the
+/// document, so place them in the order they are first mentioned in the text.
+/// Each appendix should start on a new page: put a `#pagebreak()` before it.
+/// "N priedas" is written in the top right
+/// corner. The optional title is written below it like a chapter title (bold),
+/// exactly as given: start it with a capital letter, the rest in lowercase.
+/// Appendices are included in the table of contents.
+///
+/// Give it a label to refer to it from the text: `#appendix-item[Pavadinimas] <pr-konfig>`
+/// and then `@pr-konfig` or `#custom-ref(<pr-konfig>)` gives "(žr. 1 priedą)".
+/// - title (content | none): Optional appendix title.
+/// -> heading
+#let appendix-item(..title) = {
+  assert(
+    title.named().len() == 0 and title.pos().len() <= 1,
+    message: "appendix-item takes at most one argument: the appendix title",
+  )
+  let title = title.pos().at(0, default: none)
   heading(
-    metadata("appendix-heading") + "priedas. " + body,
+    if title == none { metadata("appendix-heading") } else { metadata("appendix-heading") + title },
     level: 2,
-    numbering: (..any) => {str(any.at(1))}
+    numbering: none,
   )
 }
 
@@ -116,18 +140,25 @@
       show outline.entry: it => {
         // Recompute the gap based on the prefix content, so that the outline entry is indented
         // from the left regardless of the length of the prefix (based on the requirement)
-        let prefixContent = it.prefix()
-        let measurement = measure(prefixContent)
-        let target = targets.at(it.level - 1, default: 0.64cm)
-        let newGap = target - measurement.width
-        if it.element.body.has("children") and it.element.body.children.at(0) == metadata("appendix-heading") {
-          target = 0.64cm
+        let isAppendix = __is-appendix-heading(it.element)
+
+        // Appendices are listed as "N priedas. Pavadinimas", the number being the prefix
+        let prefixContent = if isAppendix {
+          context [#__appendix-number(it.element)]
+        } else {
+          it.prefix()
         }
+        let measurement = measure(prefixContent)
+        let target = if isAppendix { 0.64cm } else { targets.at(it.level - 1, default: 0.64cm) }
         let newGap = target - measurement.width
 
         // Uppercase body if need be
         let bodyContent = it.element.body
-        if isUpper and (it.level == 1 or it.element.numbering == none) {
+        if isAppendix {
+          let title = __appendix-title(it.element)
+          let name = __figure-kinds.appendix.supplement
+          bodyContent = if title == none { [#name] } else { [#name. #title] }
+        } else if isUpper and (it.level == 1 or it.element.numbering == none) {
           bodyContent = upper(bodyContent)
         }
 
@@ -359,6 +390,19 @@
 
     // TODO: intervalas tarp eilučių – 1,15 kiekvienai antraštei
 
+    // Priedas: kiekvienas pradedamas naujame lape, dešiniajame viršutiniame
+    // kampe rašoma "N priedas", pavadinimas (jei yra) – kaip skyriaus pavadinimas
+    if __is-appendix-heading(it) {
+      align(right, block(below: 10pt, text(weight: "regular")[
+        #__appendix-number(it) #__figure-kinds.appendix.supplement
+      ]))
+      let title = __appendix-title(it)
+      if title != none {
+        block(below: 10pt, title)
+      }
+      return
+    }
+
     // Antraštė be nr.
     if it.numbering == none {
       // Centruota lygiuotė by default, but can be overridden by the user
@@ -397,14 +441,8 @@
       }
     }
 
-    // Determine whether the heading has appending metadata attached and adjust its display accordingly
-    let isAppendixHeading = it.body.has("children") and it.body.children.at(0) == metadata("appendix-heading")
-    if isAppendixHeading {
-      block[#counter(heading).display(it.numbering) #it.body]
-    }
-
     // Poskyris ir skyrelis
-    if not isAppendixHeading and it.numbering != none and it.level != 1 {
+    if it.numbering != none and it.level != 1 {
       // abipusė lygiuotė
       set par(justify: true)
 
@@ -446,6 +484,9 @@
 ///   Use them with `figure(kind: "command", ...)`. Keys:
 ///   - `supplement` (required): text after the number in captions, e.g. "1 komanda.".
 ///   - `ref-name`: text used in references, e.g. "(žr. 1 komanda)". Defaults to `supplement`.
+///     Can also be a function `count => string`, called with the number of elements
+///     referenced together, for kinds whose wording depends on it, e.g.
+///     `count => if count == 1 { "komandą" } else { "komandas" }`.
 ///   - `single-name`: full word used when the figure is the only one of its kind
 ///     and is left unnumbered, e.g. "Komanda." and "(žr. komanda)". Defaults to `supplement`.
 ///     Currently only tables and images are left unnumbered when single, so this only matters for kinds added there.
