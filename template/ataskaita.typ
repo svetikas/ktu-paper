@@ -1,5 +1,5 @@
 #import "../src/lib.typ": (
-  ktu-paper, setup-code,
+  ktu-paper,
   ktu-table-of-contents, ktu-picture-list, ktu-table-list, ktu-code-list,
   ktu-heading-page-normal,
   ktu-table,
@@ -13,8 +13,17 @@
   figureKinds: (
     veryCustomKind: (supplement: "komanda", ref-name: "komanda"),
   ),
+  // Code blocks, optional, `code: none` disables styling
+  code: (
+    font: "Hack",
+    spacing: 80%,
+    fill: white,
+    stroke: 0.5pt + black,
+    numbers: true,
+    display-name: false,
+    display-icon: false,
+  ),
 )
-#show: setup-code.with()
 
 #show math.equation: it => {
   show regex("\d+\.\d+"): it => {show ".": {","+h(0pt)}

@@ -1,5 +1,5 @@
 #import "@local/ktu-paper:0.4.1": (
-  ktu-paper, setup-code,
+  ktu-paper,
   ktu-table-of-contents, ktu-picture-list, ktu-table-list,
   ktu-heading-page-normal,
   ktu-table,
@@ -10,7 +10,6 @@
 #show: ktu-paper.with(
   font: "Times New Roman",
 )
-#show: setup-code.with()
 
 #show figure: it => {
   set block(breakable: true)

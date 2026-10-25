@@ -1,4 +1,4 @@
-#import "@preview/codly:1.3.0": codly, codly-init
+#import "@preview/codly:2.0.0" as codly
 #import "config.typ": debug-author-table, enable-heading-experiment, __HEADING_EXPERIMENT, __FIG_PER_SECTION, __UPPERCASE_SECTION_TITLES
 #import "fragments.typ": (
   ktu-table,
@@ -286,16 +286,41 @@
   __ktu_outline(title: heading(title, outlined: true), target: figure.where(kind: kind))
 }
 
-#let setup-code(body) = {
-  show: codly-init.with()
-  codly(
-    fill: white,
-    zebra-fill: none,
-    stroke: none,
-    display-name: false,
-    display-icon: false,
+/// `code` option defaults for the library entrypoint.
+#let __CODE_DEFAULTS = (
+  font: "Hack",
+  spacing: 80%,
+  fill: white,
+  stroke: 0.5pt + black,
+  numbers: true,
+  display-name: false,
+  display-icon: false,
+)
+
+/// Applies the code block styling to the body.
+/// - code (dictionary | none): Options, merged over `__CODE_DEFAULTS`.
+///   `none` leaves raw blocks untouched.
+#let __setup-code(code, body) = {
+  if code == none {
+    return body
+  }
+  let opts = __CODE_DEFAULTS + code
+  let known = __CODE_DEFAULTS.keys()
+  for key in opts.keys() {
+    assert(
+      key in known,
+      message: "ktu-paper: unknown `code` option \"" + key + "\", expected one of: " + known.join(", "),
+    )
+  }
+
+  show raw.where(block: true): codly.new
+  show: codly.set_(number-enabled: opts.numbers)
+  show: codly.line-set_(fill: opts.fill, stroke: opts.stroke)
+  show: codly.lang-set_(
+    display-name: opts.display-name,
+    display-icon: opts.display-icon,
   )
-  show raw: set text(font: "Hack", spacing: 80%)
+  show raw: set text(font: opts.font, spacing: opts.spacing)
   body
 }
 
@@ -348,6 +373,8 @@
 
   body
 }
+
+#let setup-code(body, ..ignored) = body
 
 #let setup-page(
   font: "Times New Roman",
@@ -490,10 +517,19 @@
 ///   - `single-name`: full word used when the figure is the only one of its kind
 ///     and is left unnumbered, e.g. "Komanda." and "(žr. komanda)". Defaults to `supplement`.
 ///     Currently only tables and images are left unnumbered when single, so this only matters for kinds added there.
+/// - code (dictionary | none): Code block configuration, or `none` to leave raw blocks unstyled. Keys:
+///   - `font` (str): Monospace font. Defaults to "Hack".
+///   - `spacing` (relative): Word spacing of code text. Defaults to `80%`.
+///   - `fill` (paint): Background of code lines. Defaults to `white`.
+///   - `stroke` (stroke | none): Outline around the code block. Defaults to `0.5pt + black`; `none` removes it.
+///   - `numbers` (bool): Show line numbers. Defaults to `true`.
+///   - `display-name` (bool): Show the language name badge. Defaults to `false`.
+///   - `display-icon` (bool): Show the language icon badge. Defaults to `false`.
 #let ktu-paper(
   font: "Times New Roman",
   figureNumberingPerSection: false,
   figureKinds: (:),
+  code: (:),
   // Not sure about formal conformity of deviating
   // from the defaults of the next options,
   // but some modules may require them
@@ -509,5 +545,5 @@
   __FIG_PER_SECTION.update(figureNumberingPerSection)
   __USER_FIGURE_KINDS.update(__normalize-figure-kinds(figureKinds))
   __UPPERCASE_SECTION_TITLES.update(uppercaseSectionTitles)
-  body
+  __setup-code(code, body)
 }
