@@ -26,11 +26,18 @@
   ),
 )
 
+// Replace dots in equations with commas instead so 1.25 becomes 1,25.
 #show math.equation: it => {
   show regex("\d+\.\d+"): it => {show ".": {","+h(0pt)}
     it}
   it
 }
+
+// To be used for writing purposes to mark TODOs in the document. They will be highlighted in yellow and have a dashed border.
+#let todo(desc) = block(
+  width: 100%, inset: 10pt, stroke: (dash: "dashed"), fill: yellow.lighten(80%),
+  [*TODO:* #desc],
+)
 
 #ktu-heading-page-normal(
   faculty: highlight[Informatikos fakultetas],
