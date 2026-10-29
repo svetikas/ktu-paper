@@ -264,7 +264,7 @@
   usageInformation: (
     (highlight[...], highlight[...], highlight[...], highlight[...]),
   ),
-  showPhysicalSignature: true,
+  showPhysicalSignature: false,
 ) = {
   set text(size: 12pt)
 
@@ -334,7 +334,7 @@
   set par(justify: false)
   table(
     columns: (91pt, 127pt, 139pt, 1fr),
-    align: (x, y) => if y == 0 { top + left } else { horizon + left },
+    align: (x, y) => { top + left },
     table.header(
       [
         #set linebreak(justify: false)
@@ -372,7 +372,7 @@
     inset: 2pt,
     columns: (120pt, 177pt, 1fr),
     align: (x, y) => { horizon + left },
-    [Studentas], [#maybe(showPhysicalSignature, [#underlined-field[]])], [#underlined-field[#author]],
+    [Studentas], [#maybe(showPhysicalSignature, [#underlined-field[]])], [#underlined-field(min-width: 126pt)[#author]],
     [], [#maybe(showPhysicalSignature, [#field(size: 10pt)[_(parašas)_]])], [#field(size: 10pt)[(_vardas, pavardė_)]],
   ))
 }
