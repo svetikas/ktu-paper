@@ -375,8 +375,6 @@
   body
 }
 
-#let setup-code(body, ..ignored) = body
-
 #let setup-page(
   font: "Times New Roman",
   uppercaseSectionTitles: false,
