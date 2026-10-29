@@ -17,6 +17,9 @@
   __equation-numbering,
   __normalize-figure-kinds,
   __USER_FIGURE_KINDS,
+  __USER_FIGURE_LAYOUT,
+  __normalize-figure-layout,
+  __with-break-override,
 
   __format-ref,
   __format-figure,
@@ -286,6 +289,19 @@
   __ktu_outline(title: heading(title, outlined: true), target: figure.where(kind: kind))
 }
 
+/// Lets figures in `body` split across pages: the body may break, the caption stays
+/// attached to its start (a caption at the bottom may end up alone, see `figureLayout`).
+/// Use it to opt out of keeping a figure on one page, e.g. for a long code listing.
+/// - body (content): Content containing figures.
+/// -> content
+#let breakable-figures(body) = __with-break-override(true, body)
+
+/// Keeps every figure in `body` on one page: body and caption move to the next
+/// page together. Use it to opt out of splitting, e.g. for a short table.
+/// - body (content): Content containing figures.
+/// -> content
+#let unbreakable-figures(body) = __with-break-override(false, body)
+
 /// `code` option defaults for the library entrypoint.
 #let __CODE_DEFAULTS = (
   font: "Hack",
@@ -516,6 +532,12 @@
 ///   - `single-name`: full word used when the figure is the only one of its kind
 ///     and is left unnumbered, e.g. "Komanda." and "(žr. komanda)". Defaults to `supplement`.
 ///     Currently only tables and images are left unnumbered when single, so this only matters for kinds added there.
+/// - figureLayout (dictionary): Page-break behaviour and caption position per figure kind,
+///   `(kind: (breakable: bool, caption: top | bottom))`, every field optional. Kinds are
+///   `table`, `image`, `raw` (code), or a key of `figureKinds`. Defaults: `table` and `raw`
+///   are breakable; everything else is unbreakable. Example: `(raw: (breakable: false, caption: bottom))`.
+///   A breakable figure's top caption stays attached to the start of the body.
+///   Use `breakable-figures[...]` / `unbreakable-figures[...]` to override it locally.
 /// - code (dictionary | none): Code block configuration, or `none` to leave raw blocks unstyled. Keys:
 ///   - `font` (str): Monospace font. Defaults to "Hack".
 ///   - `spacing` (relative): Word spacing of code text. Defaults to `80%`.
@@ -529,6 +551,7 @@
   font: "Times New Roman",
   figureNumberingPerSection: false,
   figureKinds: (:),
+  figureLayout: (:),
   code: (:),
   // Not sure about formal conformity of deviating
   // from the defaults of the next options,
@@ -544,6 +567,7 @@
   )
   __FIG_PER_SECTION.update(figureNumberingPerSection)
   __USER_FIGURE_KINDS.update(__normalize-figure-kinds(figureKinds))
+  __USER_FIGURE_LAYOUT.update(__normalize-figure-layout(figureLayout))
   __UPPERCASE_SECTION_TITLES.update(uppercaseSectionTitles)
   __setup-code(code, body)
 }

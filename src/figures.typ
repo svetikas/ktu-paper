@@ -374,6 +374,65 @@
 // Figure layout
 // ---------------------------------------------------------------------------
 
+/// Default layout per figure kind (keyed like `__figure-kinds`; custom kinds
+/// and unlisted ones use `__FALLBACK_FIGURE_LAYOUT`).
+/// - breakable: whether the body may be split across pages. The caption is then
+///   attached to the start of the body (sticky), so it is never left alone at
+///   the bottom of a page. If `false`, body and caption form one unbreakable
+///   block that moves to the next page as a whole.
+/// - caption: `top` or `bottom`.
+#let __DEFAULT_FIGURE_LAYOUT = (
+  table: (breakable: true, caption: top),
+  raw: (breakable: true, caption: bottom),
+)
+#let __FALLBACK_FIGURE_LAYOUT = (breakable: false, caption: bottom)
+
+/// Author overrides, set via `ktu-paper(figureLayout: ...)`.
+#let __USER_FIGURE_LAYOUT = state("ktu-user-figure-layout", (:))
+
+/// Stack of local overrides set by `breakable-figures` / `unbreakable-figures`.
+#let __FIGURE_BREAK_OVERRIDE = state("ktu-figure-break-override", ())
+
+/// Validates author-supplied layouts: `(kind: (breakable: bool, caption: top | bottom))`,
+/// every field optional.
+#let __normalize-figure-layout(layouts) = {
+  for (key, spec) in layouts {
+    for (field, value) in spec {
+      assert(
+        field in ("breakable", "caption"),
+        message: "figureLayout." + key + ": unknown option `" + field + "`, expected `breakable` or `caption`",
+      )
+      if field == "breakable" {
+        assert(type(value) == bool, message: "figureLayout." + key + ".breakable must be a bool")
+      } else {
+        assert(
+          value == top or value == bottom,
+          message: "figureLayout." + key + ".caption must be `top` or `bottom`",
+        )
+      }
+    }
+  }
+  layouts
+}
+
+/// Resolves the layout of a figure kind key. Must be called in a context.
+#let __figure-layout(key) = {
+  let layout = __FALLBACK_FIGURE_LAYOUT + __DEFAULT_FIGURE_LAYOUT.at(key, default: (:))
+  layout = layout + __USER_FIGURE_LAYOUT.get().at(key, default: (:))
+  let overrides = __FIGURE_BREAK_OVERRIDE.get()
+  if overrides.len() > 0 {
+    layout.breakable = overrides.last()
+  }
+  layout
+}
+
+/// Runs `body` with every figure's `breakable` setting forced to `mode`.
+#let __with-break-override(mode, body) = {
+  __FIGURE_BREAK_OVERRIDE.update(stack => stack + (mode,))
+  body
+  __FIGURE_BREAK_OVERRIDE.update(stack => stack.slice(0, -1))
+}
+
 /// Formats a figure with a caption and number.
 #let __format-figure(it) = {
   let caption = it.caption
@@ -384,13 +443,39 @@
   set text(size: 11pt)
 
   let caption-line = [*#__caption-label(it)* #caption.body]
+  let key = __figure-key(it)
 
-  // Tables have captions at the top
-  if it.kind == table {
-    align(left, caption-line)
-    it.body
-  } else {
-    it.body
-    align(center, caption-line)
+  context {
+    let layout = __figure-layout(key)
+    let on-top = layout.caption == top
+    // Entire table is by default left aligned, unlike other figures which are centered
+    let body = if key == "table" { align(left, it.body) } else { it.body }
+    let caption-block = block(
+      sticky: on-top and layout.breakable,
+      width: 100%,
+      align(if on-top { left } else { center }, caption-line),
+    )
+    if layout.breakable {
+      // The body may split across pages. A caption on top is sticky and stays
+      // with the first rows; a caption at the bottom cannot be glued to the end
+      // of a splittable body, so it may end up alone on the next page.
+      if on-top {
+        caption-block
+        body
+      } else {
+        body
+        caption-block
+      }
+    } else {
+      block(breakable: false, width: 100%, {
+        if on-top {
+          caption-block
+          body
+        } else {
+          body
+          caption-block
+        }
+      })
+    }
   }
 }
