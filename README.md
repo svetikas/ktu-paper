@@ -6,9 +6,9 @@ I successfully wrote and defended a final Bachelor's thesis written with this te
 
 ## Initiating the template
 Install the downloaded template under the following directory:
-- Linux: `~/.local/share/typst/packages/local/ktu-paper/0.5.0/`
+- Linux: `~/.local/share/typst/packages/local/ktu-paper/0.5.1/`
 
 And then initiate a new project:
 ```sh
-typst init @local/ktu-paper:0.5.0
+typst init @local/ktu-paper:0.5.1
 ```
