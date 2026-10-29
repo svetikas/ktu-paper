@@ -7,7 +7,7 @@
   ktu-author-table, ktu-title-header-block,
   
   ktu-heading-page, ktu-heading-page-centered, ktu-heading-page-normal,
-  ktu-academic-honestly-declaration-page
+  ktu-academic-honestly-declaration-page, ktu-gen-ai-usage-declaration-page
 )
 #import "figures.typ": (
   ref-no, custom-ref,
