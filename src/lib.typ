@@ -503,6 +503,8 @@
   show ref: it => __format-ref(it)
 
   // Figure captions and numbering
+  // Figure is non breakable by default, actual breaking behaviour is decided per kind in `__format-figure`.
+  show figure: set block(breakable: true)
   show figure: it => __format-figure(it)
 
   // Bibliography citing style
