@@ -13,13 +13,14 @@
   figureKinds: (
     veryCustomKind: (supplement: "komanda", ref-name: "komanda"),
   ),
-  // Code blocks, optional, `code: none` disables styling
+  // Code blocks, `code: none` to disable styling
   code: (
     font: "Hack",
     spacing: 80%,
     fill: white,
     stroke: 0.5pt + black,
     numbers: true,
+    radius: 0pt,
     display-name: false,
     display-icon: false,
   ),

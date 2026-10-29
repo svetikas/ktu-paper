@@ -293,6 +293,7 @@
   fill: white,
   stroke: 0.5pt + black,
   numbers: true,
+  radius: 0pt,
   display-name: false,
   display-icon: false,
 )
@@ -314,7 +315,7 @@
   }
 
   show raw.where(block: true): codly.new
-  show: codly.set_(number-enabled: opts.numbers)
+  show: codly.set_(number-enabled: opts.numbers, radius: opts.radius)
   show: codly.line-set_(fill: opts.fill, stroke: opts.stroke)
   show: codly.lang-set_(
     display-name: opts.display-name,
@@ -523,6 +524,7 @@
 ///   - `fill` (paint): Background of code lines. Defaults to `white`.
 ///   - `stroke` (stroke | none): Outline around the code block. Defaults to `0.5pt + black`; `none` removes it.
 ///   - `numbers` (bool): Show line numbers. Defaults to `true`.
+///   - `radius` (length): Corner radius of the outline. Defaults to `0pt` (square corners).
 ///   - `display-name` (bool): Show the language name badge. Defaults to `false`.
 ///   - `display-icon` (bool): Show the language icon badge. Defaults to `false`.
 #let ktu-paper(
