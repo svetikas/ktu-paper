@@ -254,3 +254,125 @@
     #h(58%) _Patvirtinta elektroniniu būdu_
   ]
 }
+
+#let ktu-gen-ai-usage-declaration-page(
+  author: highlight[Vardenis Pavardenis],
+  faculty: highlight[Informatikos fakultetas],
+  module: highlight[Studijų modulio pavadinimas (kodas)],
+  title: highlight[Studijų darbo pavadinimas],
+  type: highlight[Studijų darbo rūšis],
+  usageInformation: (
+    (highlight[...], highlight[...], highlight[...], highlight[...]),
+  ),
+  showPhysicalSignature: true,
+) = {
+  set text(size: 12pt)
+
+  align(center)[
+    #block([*GENERATYVINIO DIRBTINIO INTELEKTO (GenDI) NAUDOJIMO DEKLARACIJA*])
+    #block[\_\_\_ \_\_\_ \_\_\_]
+  ]
+
+  [*1. Studento duomenys*]
+  table(
+    columns: (155pt, 1fr),
+    align: (x, y) => { horizon + left },
+    [*Studento vardas, pavardė*], [#author],
+    [*Studento fakultetas*], [#faculty],
+    [*Studijų modulis*], [#module],
+    [*Studijų darbo pavadinimas*], [#title],
+    [*Studijų darbo rūšis*], [#type],
+  )
+
+  [
+    #set linebreak(justify: false)
+    *2. GenDI naudojimo patvirtinimas*\
+    _Pažymėkite vieną variantą:_
+  ]
+  let usedAi = usageInformation != none and usageInformation.len() > 0
+  let checkbox(checked: false) = {
+    box(
+      width: 0.8em,
+      height: 0.8em,
+      stroke: 0.08em + black,
+      radius: 0.15em,
+      if checked {
+        let size = 0.4em
+        let margin = 0.2em
+        // Top-left to bottom-right line
+        place(top + left, dx: margin, dy: margin, line(end: (size, size), stroke: 0.08em + black))
+        // Bottom-left to top-right line
+        place(top + left, dx: margin, dy: margin + size, line(end: (size, -size), stroke: 0.08em + black))
+      } else {
+        none
+      },
+    )
+  }
+  table(
+    columns: (28pt, 1fr),
+    align: (x, y) => { horizon + left },
+    table.cell(rowspan: 2)[#align(top, checkbox(checked: not usedAi))],
+    [*Rengdamas (-a) šį studijų darbą nenaudojau generatyvinio dirbtinio intelekto įrankių*],
+    [Patvirtinu, kad studijų darbe pateiktas turinys yra mano autentiškas intelektinis darbas, o naudoti šaltiniai nurodyti pagal citavimo reikalavimus.],
+
+    table.cell(rowspan: 2)[#align(top, checkbox(checked: usedAi))],
+    [*Rengdamas (-a) šį studijų darbą naudojau generatyvinio dirbtinio intelekto įrankius*],
+    [Patvirtinu, kad GenDI įrankiai buvo naudojami laikantis studijų modulyje nustatytų GenDI naudojimo reikalavimų bei naudojimas yra skaidriai ir sąžiningai deklaruotas.],
+  )
+
+  [
+    #set linebreak(justify: false)
+    *3.	GenDI naudojimo informacija*\
+    _Užpildykite, jei rengiant studijų darbą naudojote generatyvinio dirbtinio intelekto įrankius:_
+  ]
+  let rows = if usedAi {
+    usageInformation.flatten()
+  } else {
+    // hide[x] gives each empty cell the height of one regular line of text
+    range(3).map(_ => range(4).map(_ => hide[x])).flatten()
+  }
+  set par(justify: false)
+  table(
+    columns: (91pt, 127pt, 139pt, 1fr),
+    align: (x, y) => if y == 0 { top + left } else { horizon + left },
+    table.header(
+      [
+        #set linebreak(justify: false)
+        *Darbo dalis*\
+        _(pvz., skyrius, visas darbas)_
+      ],
+      [*GenDI įrankio naudojimo tikslas*],
+      [*GenDI įrankio pavadinimas, versija / internetinė nuoroda*],
+      [
+        #set linebreak(justify: false)
+        *Studento indėlis* \
+        _(kaip GenDI rezultatas buvo patikrintas, redaguotas ar papildytas studento)_
+      ],
+    ),
+    ..rows,
+  )
+
+  let field(size: 12pt, body) = {
+    set text(size: size)
+    align(center, body)
+  }
+  let underlined-field(min-width: 92pt, body) = context {
+    let w = calc.max(min-width, measure(body).width)
+    align(center, box(
+      width: w,
+      height: 1.4em,
+      stroke: (bottom: 0.5pt + black),
+      inset: (bottom: 2pt),
+      align(center + bottom, body),
+    ))
+  }
+  let maybe(show-it, body) = if show-it { body } else { hide(body) }
+  align(bottom, table(
+    stroke: 0pt,
+    inset: 2pt,
+    columns: (120pt, 177pt, 1fr),
+    align: (x, y) => { horizon + left },
+    [Studentas], [#maybe(showPhysicalSignature, [#underlined-field[]])], [#underlined-field[#author]],
+    [], [#maybe(showPhysicalSignature, [#field(size: 10pt)[_(parašas)_]])], [#field(size: 10pt)[(_vardas, pavardė_)]],
+  ))
+}

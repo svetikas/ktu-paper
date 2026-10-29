@@ -2,6 +2,7 @@
   ktu-paper,
   ktu-table-of-contents, ktu-picture-list, ktu-table-list, ktu-code-list,
   ktu-heading-page-normal,
+  ktu-gen-ai-usage-declaration-page,
   ktu-table,
   unnumbered-heading,
   custom-ref, ref-no
@@ -165,3 +166,6 @@ Naudotojai tai pat gali apibrėžti savo figūras, pavyzdžiui, komandų fragmen
 #pagebreak()
 = Išvados
 #lorem(50)
+
+#pagebreak()
+#ktu-gen-ai-usage-declaration-page()
