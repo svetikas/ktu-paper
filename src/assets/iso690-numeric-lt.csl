@@ -176,7 +176,7 @@
       <key variable="citation-number" sort="ascending"/>
     </sort>
     <layout prefix="[" suffix="]" delimiter=", ">
-      <group delimiter=", ">
+      <group delimiter=" ">
         <text variable="citation-number"/>
         <text variable="locator"/>
       </group>
